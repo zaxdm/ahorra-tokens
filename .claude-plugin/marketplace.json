@@ -1,0 +1,13 @@
+{
+  "name": "ahorra-tokens",
+  "owner": {
+    "name": "Zait"
+  },
+  "plugins": [
+    {
+      "name": "ahorra-tokens",
+      "source": "./",
+      "description": "Mide en qué se van los tokens de Claude Code y apaga lo que no usas."
+    }
+  ]
+}

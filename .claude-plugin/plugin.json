@@ -1,0 +1,9 @@
+{
+  "name": "ahorra-tokens",
+  "version": "0.1.0",
+  "description": "Mide en qué se van los tokens de Claude Code (skills, plugins, conectores, CLAUDE.md) y apaga lo que no usas.",
+  "author": {
+    "name": "Zait"
+  },
+  "keywords": ["tokens", "costos", "limites", "configuracion", "español"]
+}
