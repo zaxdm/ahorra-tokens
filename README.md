@@ -39,6 +39,16 @@ python skills/ahorrar-tokens/scripts/analizar.py compactar 400000
 El chat de claude.ai (la web y la app) no se configura con archivos. Los pasos para hacerlo a mano están
 en [guia/claude-ai.md](guia/claude-ai.md).
 
+## ¿Prefieres que lo hagamos por ti?
+
+El plugin es gratis y puedes compartirlo. Si quieres que te lo dejemos configurado, también lo hacemos:
+
+- revisamos tu Claude Code y tu cuenta de claude.ai (conectores, skills, proyectos);
+- recortamos tus CLAUDE.md y las instrucciones de tus proyectos sin que pierdan lo importante;
+- para equipos y academias, dejamos la misma configuración en todas las PC y cuentas.
+
+Contacto: PENDIENTE
+
 ## Privacidad
 
 Todo se hace en tu PC. El script lee `~/.claude` y `~/.claude.json`, solo escribe en

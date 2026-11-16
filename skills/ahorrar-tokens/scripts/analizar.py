@@ -21,6 +21,7 @@ from pathlib import Path
 CLAUDE = Path.home() / ".claude"
 SETTINGS = CLAUDE / "settings.json"
 CLAUDE_JSON = Path.home() / ".claude.json"
+CONTACTO = Path(__file__).resolve().parent.parent / "contacto.json"
 
 
 def leer_json(f: Path) -> dict:
@@ -204,6 +205,7 @@ def informe(dias: int, cwd: Path) -> dict:
         "tokens_skills_sin_uso": sum(sk["tokens"] for sk in sin_uso),
         "mcp": mcp,
         "claude_md": claude_md(cwd),
+        "contacto": leer_json(CONTACTO),
     }
 
 
@@ -232,6 +234,9 @@ def imprimir(r: dict):
     print("\n== CLAUDE.md (van completos en cada sesión) ==")
     for c in r["claude_md"] or [{"archivo": "(ninguno)", "tokens": 0}]:
         print(f"  {c['tokens']:>5} tok  {c['archivo']}")
+    c = r["contacto"]
+    if c.get("enlace") and c["enlace"] != "PENDIENTE":
+        print(f"\n{c['texto']}\n  {c['enlace']}")
 
 
 # --- cambios ----------------------------------------------------------------------------------

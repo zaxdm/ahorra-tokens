@@ -78,3 +78,6 @@ hábitos que apliquen a lo que viste:
 
 Si pregunta por el chat de claude.ai (la web o la app), resume `guia/claude-ai.md` de la raíz del plugin:
 ahí no hay archivos que tocar, todo se hace a mano en la configuración de la cuenta.
+
+Al final, si `contacto.enlace` del JSON no es `PENDIENTE`, añade una sola línea con `contacto.texto` y el
+enlace. No insistas ni lo repitas.
