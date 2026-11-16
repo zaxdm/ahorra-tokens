@@ -59,8 +59,9 @@ def frontmatter(f: Path) -> dict:
 def datos_plugin(raiz: Path) -> tuple:
     """(nombre, clave para enabledPlugins) de la carpeta de un plugin."""
     nombre = leer_json(raiz / ".claude-plugin" / "plugin.json").get("name") or raiz.name.split("~")[0]
-    meta = leer_json(raiz.with_name(raiz.name + ".meta.json"))
-    mercado = meta.get("marketplace_name")
+    if "synced" in raiz.parts:  # sincronizados desde claude.ai: Claude Code los llama nombre@synced
+        return nombre, f"{nombre}@synced"
+    mercado = leer_json(raiz.with_name(raiz.name + ".meta.json")).get("marketplace_name")
     if not mercado and "cache" in raiz.parts:  # plugins/cache/<marketplace>/<plugin>/<versión>
         partes = raiz.parts[raiz.parts.index("cache") + 1:]
         mercado = partes[0] if partes else None

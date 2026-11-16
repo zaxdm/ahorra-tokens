@@ -44,7 +44,9 @@ Un resumen corto, con lo que más ahorra primero:
 2. Las skills sin uso, agrupadas por origen (claude.ai, plugin X, usuario) con los tokens de cada grupo.
 3. Los conectores sin uso, con cuántas herramientas suma cada uno.
 4. Si `plugins_apagados_que_siguen_cargando` no está vacío, dilo en su propio punto: esos plugins están
-   apagados en settings.json, pero sus conectores siguen cargando; apagarlos no bastó, hay que desinstalarlos.
+   «apagados» en settings.json, pero siguen cargando. Casi siempre es porque la clave de `enabledPlugins` no es
+   la que usa Claude Code (por ejemplo `nombre@mercado` en vez de `nombre@synced`): mira el nombre exacto con
+   `claude plugin list` y apágalo con `claude plugin disable <nombre@…>`.
 5. Los CLAUDE.md de más de 2 000 tokens.
 6. `autoCompactWindow`, si no está fijado y el modelo es de 1M de contexto (`[1m]`).
 
@@ -70,8 +72,9 @@ python "<carpeta de la skill>/scripts/analizar.py" prender --skill nombre1     (
 
 El script deja `settings.json.bak`. Los conectores no se apagan desde aquí:
 - Los MCP locales se apagan con `/mcp` dentro de Claude Code.
-- Un conector con `plugin_apagado` se quita desinstalando su plugin con `/plugin`. Si el plugin vino de
-  la cuenta de claude.ai, se quita allí.
+- Un conector con `plugin_apagado` se quita apagando su plugin con el nombre exacto que da
+  `claude plugin list` (`claude plugin disable <nombre@…>`). Los plugins que vienen de la cuenta de claude.ai
+  se llaman `<nombre>@synced`; apagarlos así no toca la cuenta.
 - Los conectores de claude.ai (`claude_ai_…`) se apagan en claude.ai → Configuración → Conectores. Eso
   también los quita del chat web.
 
