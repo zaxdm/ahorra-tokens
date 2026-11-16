@@ -3,7 +3,17 @@
   "version": "0.2.1",
   "description": "Mide en qué se van los tokens de Claude Code (skills, plugins, conectores, CLAUDE.md) y apaga lo que no usas.",
   "author": {
-    "name": "Zait Dioses"
+    "name": "Zait Dioses",
+    "email": "stebandioses@gmail.com"
   },
-  "keywords": ["tokens", "costos", "limites", "configuracion", "español"]
+  "keywords": [
+    "tokens",
+    "costos",
+    "limites",
+    "configuracion",
+    "español"
+  ],
+  "homepage": "https://github.com/zaxdm/ahorra-tokens",
+  "repository": "https://github.com/zaxdm/ahorra-tokens",
+  "license": "MIT"
 }
