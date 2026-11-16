@@ -1,6 +1,6 @@
 {
   "name": "ahorra-tokens",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Mide en qué se van los tokens de Claude Code (skills, plugins, conectores, CLAUDE.md) y apaga lo que no usas.",
   "author": {
     "name": "Zait Dioses"

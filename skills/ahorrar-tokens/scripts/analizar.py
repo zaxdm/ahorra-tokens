@@ -5,8 +5,9 @@ r"""Mide en qué se van los tokens de Claude Code en esta PC y apaga lo que no s
     python analizar.py prender --skill X                vuelve a prender una skill apagada
     python analizar.py compactar 500000                 fija autoCompactWindow
 
-Solo usa la librería estándar de Python. Lee ~/.claude (settings, skills, plugins, transcripciones) y
-~/.claude.json (servidores MCP); solo escribe en ~/.claude/settings.json, con copia .bak antes.
+Solo usa la librería estándar de Python. Lee ~/.claude (settings, skills, plugins, transcripciones) y solo
+escribe en ~/.claude/settings.json, con copia .bak antes. No lee archivos con tokens o claves: los
+servidores MCP salen de lo que cargaron las sesiones.
 Los tokens de las descripciones son una estimación (caracteres / 4).
 """
 import argparse
@@ -20,7 +21,6 @@ from pathlib import Path
 
 CLAUDE = Path.home() / ".claude"
 SETTINGS = CLAUDE / "settings.json"
-CLAUDE_JSON = Path.home() / ".claude.json"
 CONTACTO = Path(__file__).resolve().parent.parent / "contacto.json"
 
 
@@ -154,18 +154,6 @@ def cargados() -> dict:
     return {}
 
 
-def servidores_mcp(cwd: Path) -> dict:
-    """nombre -> dónde está configurado (solo los locales; los conectores de claude.ai salen del uso)."""
-    c = leer_json(CLAUDE_JSON)
-    d = {n: "global" for n in c.get("mcpServers", {})}
-    for ruta, p in c.get("projects", {}).items():
-        for n in p.get("mcpServers", {}):
-            d.setdefault(n, f"proyecto {Path(ruta).name}")
-    for n in leer_json(cwd / ".mcp.json").get("mcpServers", {}):
-        d.setdefault(n, "proyecto (.mcp.json)")
-    return d
-
-
 def claude_md(cwd: Path) -> list:
     archivos = [CLAUDE / "CLAUDE.md"]
     for carpeta in [cwd, *cwd.parents]:
@@ -256,14 +244,13 @@ def informe(dias: int, cwd: Path) -> dict:
         sk["usos"] = u["skills"].get(sk["nombre"], 0) + (u["skills"].get(corto, 0) if corto != sk["nombre"] else 0)
     marcar_dependencias(skills)
     sin_uso = [sk for sk in skills if not sk["apagada"] and not sk["usos"] and not sk["usada_por"]]
-    locales = servidores_mcp(cwd)
     en_sesion = cargados()
     nombres_off = {p.split("@")[0] for p in plugins_off}
     mcp = []
-    for n in sorted(set(locales) | set(u["mcp"]) | set(en_sesion)):
+    for n in sorted(set(u["mcp"]) | set(en_sesion)):
         plugin = re.match(r"plugin_(.+?)_", n)
-        donde = locales.get(n) or ("conector de claude.ai" if n.startswith("claude_ai_")
-                                   else f"plugin {plugin.group(1)}" if plugin else "integrado")
+        donde = ("conector de claude.ai" if n.startswith("claude_ai_")
+                 else f"plugin {plugin.group(1)}" if plugin else "local o integrado")
         mcp.append({"nombre": n, "donde": donde, "usos": u["mcp"].get(n, 0),
                     "cargado": n in en_sesion, **en_sesion.get(n, {"herramientas": 0, "tokens": 0}),
                     "plugin_apagado": bool(plugin and plugin.group(1) in nombres_off and n in en_sesion)})

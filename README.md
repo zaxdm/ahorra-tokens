@@ -66,9 +66,9 @@ El plugin es gratis y puedes compartirlo. Si quieres que te lo dejemos configura
 - recortamos tus CLAUDE.md y las instrucciones de tus proyectos sin que pierdan lo importante;
 - para equipos y academias, dejamos la misma configuración en todas las PC y cuentas.
 
-Contacto: WhatsApp [+51 906 706 274](https://wa.me/51906706274) · stebandioses@gmail.com
+Contacto: WhatsApp +51 906 706 274 · stebandioses@gmail.com
 
 ## Privacidad
 
-Todo se hace en tu PC. El script lee `~/.claude` y `~/.claude.json`, solo escribe en
+Todo se hace en tu PC. El script lee `~/.claude` (nunca archivos con tokens o claves), solo escribe en
 `~/.claude/settings.json` y no se conecta a internet.
