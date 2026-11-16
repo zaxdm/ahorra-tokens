@@ -27,11 +27,14 @@ el uso real.
 El JSON trae:
 - `uso`: sesiones, tokens de entrada y salida, y `contexto_base`, que es con cuántos tokens arranca la
   sesión típica. Es la cifra que más importa: se paga en cada pedido.
-- `skills`: cada skill con sus tokens estimados, `usos` en el periodo y si ya está `apagada`.
-- `skills_sin_uso` y `tokens_skills_sin_uso`.
-- `mcp`: conectores usados en el periodo. **Solo aparecen los que se usaron.** Compara esa lista con los
-  servidores MCP que tú ves en tus herramientas (`mcp__<servidor>__…`): los que ves y no aparecen
-  tienen 0 usos.
+- `skills`: cada skill con sus tokens estimados, `usos` en el periodo, si ya está `apagada` y
+  `usada_por`: las skills en uso que la nombran en sus archivos. Esas se usan por dentro (por ejemplo,
+  un humanizador que llama otra skill) aunque el historial no las cuente.
+- `skills_sin_uso` y `tokens_skills_sin_uso`: ya excluyen las que tienen `usada_por`.
+- `mcp`: cada conector con sus `usos`, si estaba `cargado` en la última sesión, cuántas `herramientas`
+  suma y `plugin_apagado` (el plugin está apagado en settings.json pero su conector sigue cargando).
+- `mcp_sin_uso` y `tokens_mcp_sin_uso`. Si tu lista de herramientas muestra un servidor que no está ahí,
+  cuéntalo también como sin uso.
 - `claude_md`: los CLAUDE.md que se cargan y cuánto pesan.
 
 ## 2. Mostrar
@@ -39,16 +42,19 @@ El JSON trae:
 Un resumen corto, con lo que más ahorra primero:
 1. El consumo del periodo y el contexto base de la sesión típica.
 2. Las skills sin uso, agrupadas por origen (claude.ai, plugin X, usuario) con los tokens de cada grupo.
-3. Los conectores sin uso.
-4. Los CLAUDE.md de más de 2 000 tokens.
-5. `autoCompactWindow`, si no está fijado y el modelo es de 1M de contexto (`[1m]`).
+3. Los conectores sin uso, con cuántas herramientas suma cada uno.
+4. Si `plugins_apagados_que_siguen_cargando` no está vacío, dilo en su propio punto: esos plugins están
+   apagados en settings.json, pero sus conectores siguen cargando; apagarlos no bastó, hay que desinstalarlos.
+5. Los CLAUDE.md de más de 2 000 tokens.
+6. `autoCompactWindow`, si no está fijado y el modelo es de 1M de contexto (`[1m]`).
 
 ## 3. Preguntar y aplicar
 
 Pregunta con opciones para tocar (multiselección) qué apagar, por grupos, con el ahorro de cada uno.
 
 Reglas:
-- **Nunca** propongas apagar una skill con usos en el periodo, ni esta misma skill.
+- **Nunca** propongas apagar una skill con usos en el periodo, con `usada_por`, ni esta misma skill. Si
+  una sin uso parece parte de un flujo (por su nombre o descripción), pregúntalo antes de proponerla.
 - Las skills de claude.ai (`anthropic-skills:…`) y las de un plugin entero se apagan igual, con su nombre.
   Si todas las skills de un plugin sobran, propón apagar el plugin con su clave de `enabledPlugins`
   (`nombre@mercado`).
@@ -64,6 +70,8 @@ python "<carpeta de la skill>/scripts/analizar.py" prender --skill nombre1     (
 
 El script deja `settings.json.bak`. Los conectores no se apagan desde aquí:
 - Los MCP locales se apagan con `/mcp` dentro de Claude Code.
+- Un conector con `plugin_apagado` se quita desinstalando su plugin con `/plugin`. Si el plugin vino de
+  la cuenta de claude.ai, se quita allí.
 - Los conectores de claude.ai (`claude_ai_…`) se apagan en claude.ai → Configuración → Conectores. Eso
   también los quita del chat web.
 

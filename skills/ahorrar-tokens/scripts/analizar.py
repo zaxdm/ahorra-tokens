@@ -76,7 +76,8 @@ def skills_instaladas(cwd: Path) -> list:
         nombre = prefijo + (fm.get("name") or f.parent.name)
         desc = fm.get("description", "")
         if nombre not in vistas:
-            vistas[nombre] = {"nombre": nombre, "origen": origen, "plugin": plugin, "tokens": tokens(nombre + desc)}
+            vistas[nombre] = {"nombre": nombre, "origen": origen, "plugin": plugin, "tokens": tokens(nombre + desc),
+                              "carpeta": f.parent}
 
     for f in sorted((CLAUDE / "skills").glob("*/SKILL.md")):
         agregar(f, "", "usuario")
@@ -90,6 +91,67 @@ def skills_instaladas(cwd: Path) -> list:
         nombre, clave = datos_plugin(f.parent.parent.parent)
         agregar(f, f"{nombre}:", f"plugin {nombre}", clave)
     return sorted(vistas.values(), key=lambda s: -s["tokens"])
+
+
+def marcar_dependencias(skills: list):
+    """Una skill que nombra en sus .md otra skill en uso (o usada por dentro, en cadena) se usa por dentro
+    aunque nunca se llame con /: se anota en sk["usada_por"] para no proponer apagarla."""
+    textos = {}
+    for sk in skills:
+        if sk["apagada"]:
+            continue
+        partes, total = [], 0
+        for f in sorted(sk["carpeta"].rglob("*.md")):
+            if total > 2_000_000:
+                break
+            try:
+                t = f.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            partes.append(t)
+            total += len(t)
+        textos[sk["nombre"]] = "\n".join(partes)
+    menciona = {}
+    for sk in skills:
+        corto = sk["nombre"].split(":")[-1]
+        patron = re.compile(r"(?<![\w-])" + re.escape(corto) + r"(?![\w-])")
+        menciona[sk["nombre"]] = {n for n, t in textos.items() if n != sk["nombre"] and patron.search(t)}
+    vivas = {sk["nombre"] for sk in skills if sk["usos"] and not sk["apagada"]}
+    while True:
+        nuevas = {n for n, quien in menciona.items() if n not in vivas and quien & vivas}
+        if not nuevas:
+            break
+        vivas |= nuevas
+    for sk in skills:
+        sk["usada_por"] = sorted(menciona[sk["nombre"]] & vivas)
+
+
+def cargados() -> dict:
+    """servidor MCP -> herramientas que cargó la sesión más reciente (de sus deferred_tools_delta)."""
+    for f in sorted((CLAUDE / "projects").glob("*/*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True):
+        nombres = set()
+        try:
+            with f.open(encoding="utf-8", errors="replace") as lineas:
+                for linea in lineas:
+                    if "deferred_tools_delta" not in linea:
+                        continue
+                    try:
+                        a = json.loads(linea).get("attachment") or {}
+                    except ValueError:
+                        continue
+                    if a.get("type") == "deferred_tools_delta":
+                        nombres |= set(a.get("addedNames") or [])
+                        nombres -= set(a.get("removedNames") or [])
+        except OSError:
+            continue
+        if nombres:
+            servidores = defaultdict(list)
+            for n in nombres:
+                if n.startswith("mcp__"):
+                    servidores[n.split("__")[1]].append(n)
+            return {s: {"herramientas": len(h), "tokens": sum(tokens(n) + 2 for n in h)}
+                    for s, h in servidores.items()}
+    return {}
 
 
 def servidores_mcp(cwd: Path) -> dict:
@@ -192,10 +254,21 @@ def informe(dias: int, cwd: Path) -> dict:
         sk["apagada"] = bool({sk["nombre"], corto} & apagadas) or bool(
             sk["plugin"] and sk["plugin"].split("@")[0] in {p.split("@")[0] for p in plugins_off})
         sk["usos"] = u["skills"].get(sk["nombre"], 0) + (u["skills"].get(corto, 0) if corto != sk["nombre"] else 0)
-    sin_uso = [sk for sk in skills if not sk["apagada"] and not sk["usos"]]
+    marcar_dependencias(skills)
+    sin_uso = [sk for sk in skills if not sk["apagada"] and not sk["usos"] and not sk["usada_por"]]
     locales = servidores_mcp(cwd)
-    mcp = [{"nombre": n, "donde": locales.get(n, "conector de claude.ai" if n.startswith("claude_ai_") else "plugin o integrado"),
-            "usos": u["mcp"].get(n, 0)} for n in sorted(set(locales) | set(u["mcp"]))]
+    en_sesion = cargados()
+    nombres_off = {p.split("@")[0] for p in plugins_off}
+    mcp = []
+    for n in sorted(set(locales) | set(u["mcp"]) | set(en_sesion)):
+        plugin = re.match(r"plugin_(.+?)_", n)
+        donde = locales.get(n) or ("conector de claude.ai" if n.startswith("claude_ai_")
+                                   else f"plugin {plugin.group(1)}" if plugin else "integrado")
+        mcp.append({"nombre": n, "donde": donde, "usos": u["mcp"].get(n, 0),
+                    "cargado": n in en_sesion, **en_sesion.get(n, {"herramientas": 0, "tokens": 0}),
+                    "plugin_apagado": bool(plugin and plugin.group(1) in nombres_off and n in en_sesion)})
+    for sk in skills:
+        sk["carpeta"] = str(sk["carpeta"])
     return {
         "uso": u,
         "ajustes": {"model": s.get("model"), "autoCompactWindow": s.get("autoCompactWindow"),
@@ -204,6 +277,9 @@ def informe(dias: int, cwd: Path) -> dict:
         "skills_sin_uso": [sk["nombre"] for sk in sin_uso],
         "tokens_skills_sin_uso": sum(sk["tokens"] for sk in sin_uso),
         "mcp": mcp,
+        "plugins_apagados_que_siguen_cargando": sorted({m["donde"].removeprefix("plugin ") for m in mcp if m["plugin_apagado"]}),
+        "mcp_sin_uso": [m["nombre"] for m in mcp if m["cargado"] and not m["usos"]],
+        "tokens_mcp_sin_uso": sum(m["tokens"] for m in mcp if m["cargado"] and not m["usos"]),
         "claude_md": claude_md(cwd),
         "contacto": leer_json(CONTACTO),
     }
@@ -225,12 +301,16 @@ def imprimir(r: dict):
     print(f"  plugins apagados: {', '.join(a['plugins_apagados']) or 'ninguno'}")
     print("\n== Skills (las descripciones van en cada sesión) ==")
     for sk in r["skills"]:
-        estado = "apagada" if sk["apagada"] else (f"{sk['usos']} usos" if sk["usos"] else "SIN USO")
-        print(f"  {sk['tokens']:>5} tok  {estado:>9}  {sk['nombre']}  [{sk['origen']}]")
+        estado = ("apagada" if sk["apagada"] else f"{sk['usos']} usos" if sk["usos"]
+                  else "la usa otra" if sk["usada_por"] else "SIN USO")
+        extra = f"  ← {', '.join(sk['usada_por'][:3])}" if sk["usada_por"] and not sk["usos"] and not sk["apagada"] else ""
+        print(f"  {sk['tokens']:>5} tok  {estado:>11}  {sk['nombre']}  [{sk['origen']}]{extra}")
     print(f"\n  {len(r['skills_sin_uso'])} skills sin uso en {u['dias']} días; apagarlas ahorra ~{miles(r['tokens_skills_sin_uso'])} tokens por sesión")
-    print("\n== Servidores MCP y conectores ==")
+    print("\n== Servidores MCP y conectores (herramientas cargadas en la última sesión) ==")
     for m in r["mcp"]:
-        print(f"  {m['usos']:>5} usos  {m['nombre']}  [{m['donde']}]")
+        aviso = "  ⚠ su plugin está apagado y sigue cargando" if m["plugin_apagado"] else ""
+        print(f"  {m['usos']:>5} usos  {m['herramientas']:>3} herr  {m['nombre']}  [{m['donde']}]{aviso}")
+    print(f"\n  {len(r['mcp_sin_uso'])} conectores cargados sin uso; quitarlos ahorra ~{miles(r['tokens_mcp_sin_uso'])} tokens por sesión (o más si no son diferidos)")
     print("\n== CLAUDE.md (van completos en cada sesión) ==")
     for c in r["claude_md"] or [{"archivo": "(ninguno)", "tokens": 0}]:
         print(f"  {c['tokens']:>5} tok  {c['archivo']}")

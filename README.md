@@ -8,6 +8,8 @@ tus conectores y tus CLAUDE.md, los uses o no. `/ahorrar-tokens` lee tus transcr
 
 - con cuántos tokens arranca tu sesión típica;
 - qué skills, plugins y conectores no usaste, y cuánto pesan;
+- qué skills no llamas tú pero usa otra skill por dentro, para no apagarlas;
+- qué conectores siguen cargando aunque apagaste su plugin;
 - qué CLAUDE.md son demasiado largos.
 
 Después te pregunta qué apagar y lo apaga en `~/.claude/settings.json`, dejando una copia `.bak`.
@@ -21,7 +23,7 @@ Dentro de Claude Code:
 /plugin install ahorra-tokens@ahorra-tokens
 ```
 
-Abre una sesión nueva y escribe `/ahorra-tokens:ahorrar-tokens`, o dile a Claude «gasto muchos tokens». Necesita Python 3.8 o más reciente; solo usa la librería estándar.
+Abre una sesión nueva y escribe `/ahorra-tokens:ahorrar-tokens`, o dile a Claude «gasto muchos tokens». Necesita Python 3.9 o más reciente; solo usa la librería estándar.
 
 ## Sin Claude
 
