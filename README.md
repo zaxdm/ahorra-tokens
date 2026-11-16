@@ -71,4 +71,4 @@ Contacto: WhatsApp +51 906 706 274 · stebandioses@gmail.com
 ## Privacidad
 
 Todo se hace en tu PC. El script lee `~/.claude` (nunca archivos con tokens o claves), solo escribe en
-`~/.claude/settings.json` y no se conecta a internet.
+`~/.claude/settings.json` y no se conecta a internet. Detalle en [PRIVACY.md](PRIVACY.md).
