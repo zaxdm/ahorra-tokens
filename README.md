@@ -17,7 +17,7 @@ Después te pregunta qué apagar y lo apaga en `~/.claude/settings.json`, dejand
 Dentro de Claude Code:
 
 ```
-/plugin marketplace add <usuario>/ahorra-tokens
+/plugin marketplace add zaxdm/ahorra-tokens
 /plugin install ahorra-tokens@ahorra-tokens
 ```
 
@@ -47,7 +47,7 @@ El plugin es gratis y puedes compartirlo. Si quieres que te lo dejemos configura
 - recortamos tus CLAUDE.md y las instrucciones de tus proyectos sin que pierdan lo importante;
 - para equipos y academias, dejamos la misma configuración en todas las PC y cuentas.
 
-Contacto: PENDIENTE
+Contacto: WhatsApp [+51 906 706 274](https://wa.me/51906706274) · stebandioses@gmail.com
 
 ## Privacidad
 
