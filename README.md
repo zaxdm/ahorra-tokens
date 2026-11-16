@@ -25,6 +25,23 @@ Dentro de Claude Code:
 
 Abre una sesión nueva y escribe `/ahorra-tokens:ahorrar-tokens`, o dile a Claude «gasto muchos tokens». Necesita Python 3.9 o más reciente; solo usa la librería estándar.
 
+Si `/plugin` no aparece (algunas versiones de la extensión de VS Code), lo mismo desde la terminal:
+
+```
+claude plugin marketplace add zaxdm/ahorra-tokens
+claude plugin install ahorra-tokens@ahorra-tokens
+```
+
+Para actualizarlo: `claude plugin update ahorra-tokens@ahorra-tokens`.
+
+### Sin el sistema de plugins
+
+Descarga el ZIP del repositorio y copia `skills/ahorrar-tokens` a `~/.claude/skills/` (en Windows,
+`C:\Users\<usuario>\.claude\skills\`). El comando queda como `/ahorrar-tokens`. Así no se actualiza solo.
+
+En Windows, la primera vez Claude pide permiso para correr `python … analizar.py`: el script solo lee tu
+configuración.
+
 ## Sin Claude
 
 El script también se puede correr directamente:
